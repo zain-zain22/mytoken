@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Token</title>
+<style>
+:root{--bg:#0b1020;--card:#161d33;--tx:#e5e7eb;--mut:#94a3b8;--tok:#4f46e5;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--line:#2a3354;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f1f5f9;--card:#fff;--tx:#0f172a;--mut:#64748b;--line:#cbd5e1;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.tabs{display:flex;gap:6px;padding:10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.tabs button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-weight:700}
+.tabs button.on{background:var(--tok);color:#fff;border-color:var(--tok)}
+.view{display:none;padding:0 12px 24px;max-width:720px;margin:auto}
+.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+h3{margin:0 0 8px;font-size:15px;color:var(--mut)}
+.big{font-size:64px;font-weight:900;text-align:center;line-height:1.1}
+.btn{border:0;border-radius:999px;padding:12px 18px;font-weight:800;background:var(--ok);color:#06210f;font-size:15px}
+.btn.alt{background:var(--tok);color:#fff}.btn.w{background:var(--warn);color:#2a1a00}.btn.r{background:var(--bad);color:#fff}.btn.g{background:var(--line);color:var(--tx)}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+.toks{display:flex;flex-wrap:wrap;gap:10px}
+.t{width:54px;height:54px;border-radius:50%;background:var(--tok);color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center;border:3px solid transparent}
+.t.sel{border-color:#fff;outline:3px solid var(--warn)}
+.t.nx{background:var(--ok);color:#06210f;animation:bl 1s infinite}
+.t.me{background:var(--warn);color:#2a1a00;border-color:#fff}
+@keyframes bl{50%{transform:scale(1.15);box-shadow:0 0 0 8px rgba(34,197,94,.35)}}
+input,select{padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--tx);font-size:16px;width:100%;margin:5px 0}
+input.n{width:130px;text-align:center}
+label{font-size:13px;color:var(--mut)}
+.st{display:inline-flex;gap:8px;align-items:center;font-weight:800}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--ok)}
+.msg{text-align:center;font-weight:800;padding:10px;border-radius:10px;margin-top:8px}
+.msg.go{background:var(--ok);color:#06210f}.msg.soon{background:var(--warn);color:#2a1a00}.msg.back{background:var(--bad);color:#fff}
+.small{font-size:12px;color:var(--mut);text-align:center;margin-top:6px}
+.err{color:var(--bad);font-weight:700;text-align:center;margin-top:6px;font-size:14px}
+#banner{display:none;background:var(--bad);color:#fff;padding:8px 12px;font-size:13px;text-align:center}
+.docbtn{display:block;width:100%;margin:8px 0;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--tx);font-size:17px;font-weight:800;text-align:left}
+.seg{display:flex;gap:6px;margin-bottom:10px}.seg button{flex:1}
+.cur{font-size:110px}
+.nxbig{display:flex;justify-content:center}.nxbig .t{width:76px;height:76px;font-size:30px}
+.mybig{font-size:56px;color:var(--warn)}
+#tv .big{font-size:min(38vw,220px)}
+.hide{display:none!important}
+#posterWrap{position:fixed;inset:0;background:#fff;color:#111;z-index:50;display:none;overflow:auto;text-align:center;padding:calc(24px + env(safe-area-inset-top,0px)) 24px 24px}
+#posterWrap.show{display:block}
+#posterWrap svg{width:min(70vw,320px);height:auto}
+@media print{.tabs,.view,#banner{display:none!important}#posterWrap .nop{display:none}}
+</style>
+</head>
+<body>
+<div id="banner"></div>
+<div class="tabs">
+  <button data-v="doctor" class="on">👨‍⚕️ Doctor</button>
+  <button data-v="patient">🧑 Patient</button>
+  <button data-v="tv">📺 TV</button>
+</div>
+
+<!-- DOCTOR -->
+<section id="doctor" class="view on">
+  <div id="dAuth">
+    <div class="card">
+      <div class="seg"><button class="btn alt" id="sgLogin" onclick="authMode('login')">Login</button><button class="btn g" id="sgReg" onclick="authMode('reg')">Register</button></div>
+
+      <div id="boxLogin">
+        <label>ഇമെയിൽ</label><input id="lgEmail" type="email" autocomplete="username">
+        <label>പാസ്‌വേഡ്</label><input id="lgPw" type="password" autocomplete="current-password">
+        <div class="row"><button class="btn" id="lgBtn" onclick="doLogin()">Login</button></div>
+      </div>
+
+      <div id="boxReg" class="hide">
+        <label>പേര്</label><input id="rgName" placeholder="ഡോ. ...">
+        <label>വിഭാഗം (ഓപ്ഷണൽ)</label><input id="rgSpec" placeholder="ഉദാ: General, Pediatrics">
+        <label>ഇമെയിൽ (ലോഗിനിന്)</label><input id="rgEmail" type="email" autocomplete="username">
+        <label>പാസ്‌വേഡ് (കുറഞ്ഞത് 6 അക്ഷരം)</label><input id="rgPw" type="password" autocomplete="new-password">
+        <label>ഹോസ്പിറ്റൽ</label><select id="rgHosp" onchange="hospMode()"></select>
+        <div id="newHosp" class="hide">
+          <label>ഹോസ്പിറ്റലിന്റെ പേര്</label><input id="nhName">
+          <label>രാജ്യം</label><input id="nhC" list="dlC" placeholder="ഉദാ: India">
+          <label>സംസ്ഥാനം</label><input id="nhS" list="dlS" placeholder="ഉദാ: Kerala">
+          <label>ജില്ല</label><input id="nhD" list="dlD" placeholder="ഉദാ: Malappuram">
+          <datalist id="dlC"></datalist><datalist id="dlS"></datalist><datalist id="dlD"></datalist>
+          <div class="small">നിലവിലുള്ളവ നിർദ്ദേശമായി വരും, പുതിയത് ടൈപ്പ് ചെയ്യാം. സേവ് ചെയ്താൽ മറ്റുള്ളവർക്ക് ലിസ്റ്റിൽ കിട്ടും.</div>
+        </div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="rgBtn" onclick="doRegister()">Register</button></div>
+      </div>
+      <div class="err" id="aErr"></div>
+    </div>
+  </div>
+
+  <div id="dPanel" class="hide">
+    <div class="card"><div class="row" style="justify-content:space-between"><b id="dWho"></b><button class="btn g" style="padding:8px 14px" onclick="logout()">Logout</button></div></div>
+    <div class="card">
+      <h3>രോഗികൾക്കുള്ള ലിങ്ക് / QR</h3>
+      <div class="small" id="lnk" style="word-break:break-all;margin:0 0 10px"></div>
+      <div class="row"><button class="btn alt" onclick="copyLink()">📋 Copy</button><button class="btn alt" onclick="shareLink()">📤 Share</button><button class="btn" onclick="showPoster()">QR / പോസ്റ്റർ</button></div>
+      <div class="small" id="lnkMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Now with Doctor</h3>
+      <div class="big" id="dCur">—</div>
+      <div class="row" style="margin-top:10px"><span class="st"><span class="dot" id="dDot"></span><span id="dSt"></span></span></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" onclick="setSt('consulting')">🟢</button>
+        <button class="btn w" onclick="setSt('break')">🟡 Break</button>
+        <button class="btn r" onclick="setSt('emergency')">🔴 Emergency</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row"><button class="btn alt" onclick="nextTok()">NEXT ▶</button><button class="btn g" onclick="undo()">↩ Undo</button></div>
+      <div class="row" style="margin-top:10px"><input class="n" id="num" type="number" inputmode="numeric" placeholder="Token no."><button class="btn" onclick="callNum()">Call</button></div>
+      <div class="small" id="dMsg">NEXT = വരിയിലെ ആദ്യ ടോക്കൺ · വേറെ ആളാണെങ്കിൽ ടോക്കൺ ടാപ്പ് ചെയ്ത് Call</div>
+    </div>
+    <div class="card">
+      <h3>Waiting line · served: <span id="served">0</span></h3>
+      <div class="toks" id="dList"></div>
+      <div class="row" style="margin-top:12px"><button class="btn g" onclick="resetQ()">⟲ Reset queue</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- PATIENT -->
+<section id="patient" class="view">
+  <div id="pStep1" class="card">
+    <h3>നിങ്ങളുടെ സ്ഥലവും ഹോസ്പിറ്റലും തിരഞ്ഞെടുക്കൂ</h3><div class="err" id="pNote" style="font-size:13px"></div>
+    <select id="pC" onchange="locRefresh()"></select>
+    <select id="pS" onchange="locRefresh()"></select>
+    <select id="pD" onchange="locRefresh()"></select>
+    <select id="pH" onchange="locRefresh()"></select>
+    <div id="pDocs"></div>
+  </div>
+  <div id="pStep2" class="card hide">
+    <h3 id="pDocName"></h3>
+    <p style="margin:6px 0 12px">നിങ്ങളുടെ ടോക്കൺ നമ്പർ ടൈപ്പ് ചെയ്യൂ</p>
+    <div class="row"><input class="n" id="my" type="number" inputmode="numeric" placeholder="ഉദാ: 12"><button class="btn" onclick="openBoard()">തുറക്കൂ</button></div>
+    <div class="row" style="margin-top:10px"><button class="btn g" onclick="pStep(1)">← ഡോക്ടറെ മാറ്റുക</button></div>
+  </div>
+  <div id="pStep3" class="hide">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><b id="pDocName2"></b><button class="btn g" style="padding:8px 14px" onclick="pStep(1)">മാറ്റുക</button></div>
+      <div class="small" id="pHospName"></div>
+      <h3 style="margin-top:12px;text-align:center">ഇപ്പോൾ ഡോക്ടറുടെ മുറിയിൽ</h3>
+      <div class="big cur" id="pCur">—</div>
+      <div class="row"><span class="st"><span class="dot" id="pDot"></span><span id="pSt"></span></span></div>
+    </div>
+    <div class="card">
+      <h3 style="text-align:center">അടുത്തത്</h3>
+      <div class="nxbig"><div class="t nx" id="pNext">—</div></div>
+    </div>
+    <div class="card">
+      <h3 style="text-align:center">നിങ്ങളുടെ ടോക്കൺ</h3>
+      <div class="big mybig" id="pMy">—</div>
+      <div class="small" id="pAhead" style="font-size:15px"></div>
+      <div id="pMsg"></div>
+    </div>
+    <div class="card">
+      <h3>കാത്തിരിക്കുന്നവർ (ക്രമത്തിൽ)</h3>
+      <div class="toks" id="pList"></div>
+      <div class="small">പച്ച (മിന്നുന്നത്) = അടുത്തത് · മഞ്ഞ = നിങ്ങളുടെ ടോക്കൺ</div>
+    </div>
+  </div>
+</section>
+
+<!-- TV -->
+<section id="tv" class="view">
+  <div class="card"><label>ഡോക്ടർ</label><select id="tvSel" onchange="tvDoc=this.value;lastCur=undefined;render()"></select></div>
+  <div class="card"><h3 style="text-align:center">NOW SERVING</h3><div class="big" id="tCur">—</div>
+  <div class="row"><span class="st"><span class="dot" id="tDot"></span><span id="tSt"></span></span></div></div>
+  <div class="card"><h3>Next</h3><div class="toks" id="tNext"></div></div>
+</section>
+
+<div id="posterWrap">
+  <h1 id="poName" style="margin:10px 0 4px;font-size:34px"></h1>
+  <div id="poHosp" style="color:#444;margin-bottom:14px"></div>
+  <div id="poQr"></div>
+  <p style="font-size:22px;font-weight:800;margin:14px 0 4px">ടോക്കൺ ലൈവ് കാണാൻ സ്കാൻ ചെയ്യൂ</p>
+  <p style="font-size:16px;margin:0 0 6px">വീട്ടിലിരുന്നും ഇപ്പോഴത്തെ ടോക്കൺ കാണാം</p>
+  <div id="poLink" style="font-size:11px;color:#666;word-break:break-all"></div>
+  <div class="row nop" style="margin-top:18px"><button class="btn" onclick="window.print()">🖨 Print</button><button class="btn g" onclick="$('posterWrap').classList.remove('show')">Close</button></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+/* ======= FIREBASE CONFIG (ഇത് രഹസ്യമല്ല) ======= */
+const firebaseConfig = {
+  apiKey: "AIzaSyD5cLtXZK5f_BUK5u2dtg3jvEFgIaErJhU",
+  authDomain: "my-token-1885c.firebaseapp.com",
+  projectId: "my-token-1885c",
+  storageBucket: "my-token-1885c.firebasestorage.app",
+  messagingSenderId: "707668428467",
+  appId: "1:707668428467:web:3fd57cb32a7f39a0de92c6"
+};
+/* ================================================ */
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MYK=id=>'tokenMy:'+id;
+const ST={consulting:['Consulting','var(--ok)'],break:['On Break – Please wait','var(--warn)'],emergency:['Emergency – Please wait','var(--bad)']};
+function fail(e){console.error(e);const b=$('banner');b.style.display='block';b.textContent='ഡാറ്റാബേസ് പിശക്: '+(e.code||e.message||e)}
+
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(), db=firebase.firestore();
+
+/* ---------- registry (live from Firestore) ---------- */
+let REG={hospitals:[],doctors:[]}, docsLoaded=false;
+const uniq=a=>[...new Set(a)];
+const hosp=id=>REG.hospitals.find(h=>h.id===id);
+const doc=id=>REG.doctors.find(d=>d.id===id);
+const hLabel=h=>h.name+' — '+h.district+', '+h.state;
+db.collection('hospitals').onSnapshot(s=>{REG.hospitals=s.docs.map(d=>({id:d.id,...d.data()}));refreshReg();render()},fail);
+db.collection('doctors').onSnapshot(s=>{REG.doctors=s.docs.map(d=>({id:d.id,...d.data()}));docsLoaded=true;refreshReg();render()},fail);
+
+function fill(id,vals,ph,keep){
+  const el=$(id);
+  el.innerHTML='<option value="">'+esc(ph)+'</option>'+vals.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
+  if(keep&&vals.includes(keep))el.value=keep; else if(vals.length===1)el.value=vals[0];
+}
+
+/* ---------- queue state (live) ---------- */
+function init(){return{queue:Array.from({length:20},(_,i)=>i+1),current:null,status:'consulting',next:21,served:0,moved:[],movedAt:0}}
+function supply(X){while(X.queue.length<15)X.queue.push(X.next++)}
+const W={};
+function listen(slot,id,set){
+  if(!id){if(W[slot]){W[slot].un();W[slot]=null}return}
+  if(W[slot]&&W[slot].id===id)return;
+  if(W[slot])W[slot].un();
+  set(null);
+  W[slot]={id,un:db.collection('queues').doc(id).onSnapshot(s=>{set(s.exists?s.data():null);render()},fail)};
+}
+let dDoc=null,S=null,tvDoc=null,T=null,pDoc=null,P=null,my=null,sel=null,lastCur,alertedFor=null,undoStack=[];
+function save(){if(!dDoc||!S)return;supply(S);db.collection('queues').doc(dDoc).set(S).catch(fail)}
+function snap(){undoStack.push(JSON.parse(JSON.stringify(S)));if(undoStack.length>20)undoStack.shift()}
+function msg(m){$('dMsg').textContent=m}
+
+/* ---------- doctor auth ---------- */
+function authMode(m){
+  $('boxLogin').classList.toggle('hide',m!=='login');$('boxReg').classList.toggle('hide',m!=='reg');
+  $('sgLogin').className='btn '+(m==='login'?'alt':'g');$('sgReg').className='btn '+(m==='reg'?'alt':'g');$('aErr').textContent='';
+}
+function authMsg(e){
+  const c=e.code||'';
+  if(c==='auth/email-already-in-use')return 'ഈ ഇമെയിൽ നേരത്തെ രജിസ്റ്റർ ചെയ്തിട്ടുണ്ട്';
+  if(c==='auth/weak-password')return 'പാസ്‌വേഡ് കുറഞ്ഞത് 6 അക്ഷരം വേണം';
+  if(c==='auth/invalid-email')return 'ഇമെയിൽ തെറ്റാണ്';
+  if(c==='auth/operation-not-allowed')return 'Firebase-ൽ Email/Password സൈൻ-ഇൻ ഓൺ ചെയ്തിട്ടില്ല';
+  if(c.startsWith('auth/invalid-')||c==='auth/wrong-password'||c==='auth/user-not-found')return 'ഇമെയിൽ അല്ലെങ്കിൽ പാസ്‌വേഡ് തെറ്റാണ്';
+  if(c==='permission-denied'||c==='firestore/permission-denied')return 'അനുമതി ഇല്ല (Firestore rules പരിശോധിക്കുക)';
+  return 'പിശക്: '+(c||e.message);
+}
+function refreshReg(){
+  const rk=$('rgHosp').value;
+  $('rgHosp').innerHTML=REG.hospitals.map(h=>'<option value="'+esc(h.id)+'">'+esc(hLabel(h))+'</option>').join('')+'<option value="new">➕ പുതിയ ഹോസ്പിറ്റൽ ചേർക്കുക</option>';
+  if(rk&&(rk==='new'||hosp(rk)))$('rgHosp').value=rk;
+  $('dlC').innerHTML=uniq(REG.hospitals.map(h=>h.country)).map(v=>'<option value="'+esc(v)+'">').join('');
+  $('dlS').innerHTML=uniq(REG.hospitals.map(h=>h.state)).map(v=>'<option value="'+esc(v)+'">').join('');
+  $('dlD').innerHTML=uniq(REG.hospitals.map(h=>h.district)).map(v=>'<option value="'+esc(v)+'">').join('');
+  const tk=tvDoc;
+  $('tvSel').innerHTML=REG.doctors.map(d=>'<option value="'+esc(d.id)+'">'+esc(d.name)+' — '+esc(hosp(d.hospitalId)?.name||'')+'</option>').join('');
+  if(tk&&doc(tk))$('tvSel').value=tk;else{tvDoc=REG.doctors[0]?.id||null;if(tvDoc)$('tvSel').value=tvDoc}
+  hospMode();locRefresh();tryHash();
+}
+function hospMode(){$('newHosp').classList.toggle('hide',$('rgHosp').value!=='new')}
+function busy(id,on){$(id).disabled=on}
+async function doLogin(){
+  const em=$('lgEmail').value.trim(),pw=$('lgPw').value;
+  if(!em||!pw){$('aErr').textContent='ഇമെയിലും പാസ്‌വേഡും നൽകുക';return}
+  busy('lgBtn',true);$('aErr').textContent='';
+  try{await auth.signInWithEmailAndPassword(em,pw);$('lgPw').value=''}catch(e){$('aErr').textContent=authMsg(e)}
+  busy('lgBtn',false);
+}
+function logout(){auth.signOut()}
+async function doRegister(){
+  const name=$('rgName').value.trim(),em=$('rgEmail').value.trim(),pw=$('rgPw').value,err=t=>{$('aErr').textContent=t};
+  if(!name)return err('പേര് നൽകുക');
+  if(!em)return err('ഇമെയിൽ നൽകുക');
+  if(pw.length<6)return err('പാസ്‌വേഡ് കുറഞ്ഞത് 6 അക്ഷരം വേണം');
+  let hid=$('rgHosp').value,newH=null;
+  if(hid==='new'){
+    const canon=(list,v)=>list.find(x=>x.toLowerCase()===v.toLowerCase())||v;
+    const hn=$('nhName').value.trim(),c=$('nhC').value.trim(),s=$('nhS').value.trim(),d=$('nhD').value.trim();
+    if(!hn||!c||!s||!d)return err('ഹോസ്പിറ്റലിന്റെ പേര്, രാജ്യം, സംസ്ഥാനം, ജില്ല എല്ലാം നൽകുക');
+    const C=canon(uniq(REG.hospitals.map(h=>h.country)),c),Sx=canon(uniq(REG.hospitals.map(h=>h.state)),s),D=canon(uniq(REG.hospitals.map(h=>h.district)),d);
+    const ex=REG.hospitals.find(h=>h.name.toLowerCase()===hn.toLowerCase()&&h.country===C&&h.state===Sx&&h.district===D);
+    if(ex)hid=ex.id;else newH={name:hn,country:C,state:Sx,district:D};
+  }
+  busy('rgBtn',true);err('');
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(em,pw);
+    const uid=cred.user.uid;
+    if(newH){const r=await db.collection('hospitals').add(newH);hid=r.id}
+    await db.collection('doctors').doc(uid).set({name,spec:$('rgSpec').value.trim(),hospitalId:hid});
+    await db.collection('queues').doc(uid).set(init());
+    ['rgName','rgSpec','rgEmail','rgPw','nhName','nhC','nhS','nhD'].forEach(i=>$(i).value='');
+  }catch(e){err(authMsg(e))}
+  busy('rgBtn',false);
+}
+auth.onAuthStateChanged(u=>{dDoc=u?u.uid:null;if(!u){S=null;undoStack=[]}lastCur=undefined;render()});
+
+/* ---------- doctor actions ---------- */
+function call(t){
+  const i=S.queue.indexOf(t);if(i<0){msg('ആ ടോക്കൺ ലിസ്റ്റിൽ ഇല്ല');return}
+  snap();
+  const before=S.queue.slice(0,i),rest=S.queue.slice(i+1);
+  before.forEach((x,k)=>rest.splice(Math.min(5+k,rest.length),0,x));
+  S.queue=rest;S.current=t;S.served++;S.moved=before;S.movedAt=Date.now();
+  msg(before.length?('വിളിച്ചു '+t+' · '+before.length+' പേർ 5 സ്ഥാനം പിന്നിലേക്ക്'):('വിളിച്ചു '+t));
+  sel=null;save();render();
+}
+function nextTok(){call(S.queue[0])}
+function callNum(){const v=Number($('num').value);if(v)call(v);$('num').value=''}
+function undo(){if(!undoStack.length){msg('Undo ചെയ്യാൻ ഒന്നുമില്ല');return}S=undoStack.pop();msg('തിരുത്തി');save();render()}
+function setSt(s){snap();S.status=s;save();render()}
+function resetQ(){if(!confirm('ക്യൂ പൂർണമായി റീസെറ്റ് ചെയ്യട്ടെ?'))return;snap();S=init();save();render()}
+
+/* ---------- share link / QR ---------- */
+const BASE=location.href.split('#')[0];
+const linkFor=id=>BASE+'#dr-'+id;
+function flash(t){const e=$('lnkMsg');e.textContent=t;setTimeout(()=>{e.textContent=''},2500)}
+function copyLink(){const u=linkFor(dDoc);
+  const fb=()=>{const a=document.createElement('textarea');a.value=u;document.body.appendChild(a);a.select();try{document.execCommand('copy');flash('ലിങ്ക് കോപ്പി ചെയ്തു')}catch(e){flash('കോപ്പി ചെയ്യാൻ കഴിഞ്ഞില്ല')}a.remove()};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(()=>flash('ലിങ്ക് കോപ്പി ചെയ്തു'),fb);else fb()}
+function shareLink(){const d=doc(dDoc),u=linkFor(dDoc);if(navigator.share)navigator.share({title:'My Token',text:d.name+' – ടോക്കൺ ലൈവ് കാണാൻ',url:u}).catch(()=>{});else copyLink()}
+function showPoster(){const d=doc(dDoc),u=linkFor(dDoc),h=hosp(d.hospitalId);
+  $('poName').textContent=d.name;$('poHosp').textContent=h?hLabel(h):'';$('poLink').textContent=u;
+  let svg='';try{const q=qrcode(0,'M');q.addData(u);q.make();svg=q.createSvgTag(6,2)}catch(e){svg='<div>QR ലോഡ് ആയില്ല</div>'}
+  $('poQr').innerHTML=svg;$('posterWrap').classList.add('show')}
+function tryHash(){
+  const m=/^#dr-(.+)$/.exec(location.hash);if(!m||!docsLoaded)return;
+  if(!doc(m[1])){$('pNote').textContent='ഈ ലിങ്കിലെ ഡോക്ടറെ കണ്ടെത്താനായില്ല. താഴെ നിന്ന് തിരഞ്ഞെടുക്കൂ.';return}
+  if(pDoc===m[1])return;
+  document.querySelector('[data-v=patient]').click();pickDoc(m[1]);
+}
+window.addEventListener('hashchange',tryHash);
+
+/* ---------- patient flow ---------- */
+function locRefresh(){
+  const H=REG.hospitals;
+  fill('pC',uniq(H.map(h=>h.country)),'രാജ്യം',$('pC').value);
+  fill('pS',uniq(H.filter(h=>h.country===$('pC').value).map(h=>h.state)),'സംസ്ഥാനം',$('pS').value);
+  fill('pD',uniq(H.filter(h=>h.country===$('pC').value&&h.state===$('pS').value).map(h=>h.district)),'ജില്ല',$('pD').value);
+  const hs=H.filter(h=>h.country===$('pC').value&&h.state===$('pS').value&&h.district===$('pD').value);
+  const cur=$('pH').value;
+  $('pH').innerHTML='<option value="">ഹോസ്പിറ്റൽ</option>'+hs.map(h=>'<option value="'+esc(h.id)+'">'+esc(h.name)+'</option>').join('');
+  if(hs.some(h=>h.id===cur))$('pH').value=cur;else if(hs.length===1)$('pH').value=hs[0].id;
+  const ds=REG.doctors.filter(d=>d.hospitalId===$('pH').value);
+  $('pDocs').innerHTML=$('pH').value?(ds.length?'<h3 style="margin-top:12px">ഡോക്ടറെ തിരഞ്ഞെടുക്കൂ</h3>'+ds.map(d=>'<button class="docbtn" onclick="pickDoc(\''+esc(d.id)+'\')">👨‍⚕️ '+esc(d.name)+(d.spec?' <span style="font-weight:400;color:var(--mut)">· '+esc(d.spec)+'</span>':'')+'</button>').join(''):'<div class="small">ഈ ഹോസ്പിറ്റലിൽ ഡോക്ടർമാർ ഇല്ല</div>'):'';
+}
+function pStep(n){['pStep1','pStep2','pStep3'].forEach((id,i)=>$(id).classList.toggle('hide',i!==n-1));lastCur=undefined;if(n===1){pDoc=null;P=null}render()}
+function pickDoc(id){
+  const d=doc(id);if(!d)return;pDoc=id;
+  $('pDocName').textContent=d.name;$('pDocName2').textContent=d.name;$('pHospName').textContent=hosp(d.hospitalId)?hLabel(hosp(d.hospitalId)):'';
+  let saved=null;try{saved=Number(localStorage.getItem(MYK(id)))||null}catch(e){}
+  $('my').value=saved||'';my=null;pStep(2);
+}
+function openBoard(){
+  const v=Number($('my').value);if(!v){$('my').focus();return}
+  my=v;alertedFor=null;try{localStorage.setItem(MYK(pDoc),v)}catch(e){}pStep(3);
+}
+function beep(){try{window._ac=window._ac||new (window.AudioContext||window.webkitAudioContext)();const a=window._ac,o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.value=.15;o.start();o.stop(a.currentTime+.35)}catch(e){}}
+function paint(k,X){const s=ST[X.status]||ST.consulting;$(k+'Dot').style.background=s[1];$(k+'St').textContent=s[0]}
+
+/* ---------- render ---------- */
+function render(){
+  listen('d',dDoc,x=>{S=x||init()});
+  listen('t',tvDoc,x=>{T=x});
+  listen('p',pDoc,x=>{P=x});
+  const loggedIn=!!(dDoc&&S&&doc(dDoc));
+  $('dAuth').classList.toggle('hide',loggedIn);$('dPanel').classList.toggle('hide',!loggedIn);
+  if(loggedIn){
+    const d=doc(dDoc);$('dWho').textContent=d.name+' · '+(hosp(d.hospitalId)?.name||'');$('lnk').textContent=linkFor(dDoc);
+    paint('d',S);$('dCur').textContent=S.current??'—';$('served').textContent=S.served;
+    const dl=$('dList');dl.innerHTML='';
+    S.queue.forEach(n=>{const e=document.createElement('div');e.className='t'+(sel===n?' sel':'');e.textContent=n;e.onclick=()=>{sel=n;$('num').value=n;render()};dl.appendChild(e)});
+  }
+  // TV
+  const TT=T||init();supply(TT);
+  paint('t',TT);$('tCur').textContent=TT.current??'—';
+  const tn=$('tNext');tn.innerHTML='';
+  TT.queue.slice(0,6).forEach((n,i)=>{const e=document.createElement('div');e.className='t'+(i===0?' nx':'');e.textContent=n;tn.appendChild(e)});
+  // patient board
+  const board=!$('pStep3').classList.contains('hide');
+  const Q=P||init();supply(Q);
+  if(pDoc&&board){
+    paint('p',Q);
+    $('pCur').textContent=Q.current??'—';$('pNext').textContent=Q.queue[0]??'—';$('pMy').textContent=my;
+    const pos=Q.queue.indexOf(my),m=$('pMsg'),a=$('pAhead');
+    const wasMoved=(Q.moved||[]).includes(my)&&Date.now()-Q.movedAt<10*60*1000;
+    if(Q.current===my){m.className='msg go';m.textContent='✅ നിങ്ങളുടെ ഊഴം! അകത്തേക്ക് പോകൂ';a.textContent=''}
+    else if(pos<0){m.className='';m.textContent='';a.textContent='ഈ ടോക്കൺ ലിസ്റ്റിൽ ഇല്ല / കഴിഞ്ഞു'}
+    else{
+      a.textContent=pos===0?'നിങ്ങളാണ് അടുത്തത്!':'നിങ്ങൾക്ക് മുമ്പ് '+pos+' ടോക്കൺ കൂടി';
+      if(wasMoved){m.className='msg back';m.textContent='നിങ്ങൾ വരാത്തതിനാൽ ടോക്കൺ 5 സ്ഥാനം പിന്നിലേക്ക് മാറ്റി'}
+      else if(pos<=3){m.className='msg soon';m.textContent='⏰ അടുത്തെത്തി, ക്ലിനിക്കിലേക്ക് പുറപ്പെടാം'}
+      else{m.className='';m.textContent=''}
+      const key=my+':'+pDoc;
+      if(pos<=3&&alertedFor!==key){alertedFor=key;beep();try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}}
+    }
+    const pl=$('pList');pl.innerHTML='';
+    Q.queue.forEach((n,i)=>{const e=document.createElement('div');e.className='t'+(i===0?' nx':'')+(n===my?' me':'');e.textContent=n;pl.appendChild(e)});
+  }
+  const act=document.querySelector('.view.on').id;
+  const c=act==='patient'?(pDoc&&board?Q.current:undefined):act==='tv'?TT.current:(loggedIn?S.current:undefined);
+  if(lastCur!==undefined&&c!==lastCur&&c!=null)beep();
+  lastCur=c;
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v));
+  lastCur=undefined;render();
+});
+render();
+</script>
+</body>
+</html>
